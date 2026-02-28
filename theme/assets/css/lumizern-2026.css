@@ -1,0 +1,244 @@
+/*
+ Theme Name: Lumizern Vibe — Ultimate Masterpiece 2026 Foundation
+ Description: Performance-aware visual system for WooCommerce vibe storefronts.
+ Version: 3.1
+*/
+
+:root {
+  --black: #1a1426;
+  --white: #ffffff;
+  --coral: #b30066;
+  --coral-dark: #9143b8;
+  --apple-gray-1: #f5f5f7;
+  --apple-gray-2: #d2d2d7;
+  --apple-gray-3: #86868b;
+  --apple-gray-4: #424245;
+  --apple-blue: #0071e3;
+
+  --vibe-primary: #8a2be2;
+  --vibe-primary-dark: #7b1fa2;
+  --vibe-secondary: #ff6b6b;
+  --vibe-surface: #1a1426;
+  --vibe-text: #1a1426;
+  --vibe-text-secondary: #666;
+
+  --quiz-primary: #8a2be2;
+  --quiz-primary-dark: #7b1fa2;
+  --quiz-surface: #f7f5fc;
+  --quiz-surface-hover: #efebfa;
+  --quiz-text: #1a1426;
+  --quiz-text-secondary: #5d5d70;
+  --quiz-border: #e6e0f5;
+  --quiz-transition: all 0.25s ease;
+
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-coral: linear-gradient(135deg, var(--coral) 0%, var(--coral-dark) 100%);
+
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 12px 24px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 20px 44px rgba(0, 0, 0, 0.16);
+
+  --radius-sm: 8px;
+  --radius: 16px;
+  --radius-lg: 24px;
+
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2rem;
+
+  --header-height: 60px;
+}
+
+* { box-sizing: border-box; }
+
+/* Header */
+.lz-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+}
+
+.lz-header.scrolled {
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Fixed from invalid var(----black) and missing semicolon */
+.product-card-2025 {
+  background: var(--black);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  border: none;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.product-card-2025:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Improved product image rendering (keeps ratio and avoids layout shift) */
+.product-image-2025 {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: contain;
+  background: #fff;
+  padding: var(--space-sm);
+  display: block;
+}
+
+/* Woo shop grid */
+.products {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-md);
+  list-style: none;
+  padding: 0;
+}
+
+.product {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.product:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.product .woocommerce-loop-product__title,
+.product .price {
+  color: var(--vibe-text);
+}
+
+.product .button,
+.woocommerce a.button,
+.woocommerce button.button {
+  background: var(--gradient-coral) !important;
+  color: var(--white) !important;
+  border-radius: 999px !important;
+  border: none !important;
+  font-weight: 700 !important;
+}
+
+/* Affiliate badge (non-intrusive and specific) */
+.onsale.affiliate-badge {
+  background: #111;
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+/* Avoid .vibe-badge collision by using dedicated class for trending cards */
+.trending-vibe-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  z-index: 2;
+}
+
+/* Cart + checkout + account visual alignment while preserving Woo behavior */
+.woocommerce-cart .cart,
+.woocommerce-checkout #customer_details,
+.woocommerce-account .woocommerce {
+  background: #fff;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-md);
+}
+
+.woocommerce-cart table.shop_table,
+.woocommerce-checkout table.shop_table,
+.woocommerce-account table.shop_table {
+  border: 1px solid var(--apple-gray-2);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.woocommerce-cart .cart_totals,
+.woocommerce-checkout #order_review {
+  background: var(--apple-gray-1);
+  border-radius: var(--radius);
+  padding: var(--space-md);
+}
+
+.woocommerce form .form-row input.input-text,
+.woocommerce form .form-row textarea,
+.woocommerce form .form-row select {
+  border: 1px solid var(--apple-gray-2);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+}
+
+.woocommerce form .form-row input.input-text:focus,
+.woocommerce form .form-row textarea:focus,
+.woocommerce form .form-row select:focus {
+  outline: 2px solid rgba(138, 43, 226, 0.2);
+  border-color: var(--vibe-primary);
+}
+
+/* Affiliate content section now has all required variables */
+.affiliate-content-section {
+  background: var(--quiz-surface);
+  border: 1px solid var(--quiz-border);
+  border-radius: var(--radius);
+  padding: clamp(1rem, 2vw, 2rem);
+}
+
+.cta-btn-primary,
+.cta-btn-secondary {
+  border-radius: var(--radius-sm);
+  transition: var(--quiz-transition);
+}
+
+.cta-btn-primary {
+  background: var(--quiz-primary);
+  color: #fff;
+}
+
+.cta-btn-primary:hover { background: var(--quiz-primary-dark); }
+
+.cta-btn-secondary {
+  background: transparent;
+  color: var(--quiz-text);
+  border: 1px solid var(--quiz-border);
+}
+
+.cta-btn-secondary:hover { background: var(--quiz-surface-hover); }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .products { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 560px) {
+  .products { grid-template-columns: 1fr; }
+}

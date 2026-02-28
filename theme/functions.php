@@ -1,0 +1,378 @@
+<?php
+/**
+ * Lumizern Vibe 2026 - core runtime.
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+final class LumizernVibe2025
+{
+    private static ?LumizernVibe2025 $instance = null;
+    private string $version = '1.0.0';
+
+    public static function getInstance(): LumizernVibe2025
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+
+        return self::$instance;
+    }
+
+    private function __construct()
+    {
+        $this->version = wp_get_theme()->get('Version') ?: $this->version;
+        $this->setupHooks();
+    }
+
+    private function __clone() {}
+    public function __wakeup() {}
+
+    private function setupHooks(): void
+    {
+        add_action('after_setup_theme', [$this, 'themeSetup']);
+        add_action('wp_enqueue_scripts', [$this, 'enqueueAssets'], 20);
+        add_action('init', [$this, 'registerTaxonomyAndPostTypes']);
+
+        add_action('wp_ajax_get_vibe_products', [$this, 'getVibeProducts']);
+        add_action('wp_ajax_nopriv_get_vibe_products', [$this, 'getVibeProducts']);
+
+        add_action('wp_ajax_lumizern_save_quiz_profile', [$this, 'saveQuizProfile']);
+        add_action('wp_ajax_nopriv_lumizern_save_quiz_profile', [$this, 'saveQuizProfile']);
+
+        add_action('woocommerce_product_options_general_product_data', [$this, 'addAffiliateFields']);
+        add_action('woocommerce_process_product_meta', [$this, 'saveAffiliateFields']);
+        add_action('woocommerce_before_shop_loop_item_title', [$this, 'affiliateBadge'], 9);
+        add_filter('woocommerce_product_add_to_cart_text', [$this, 'affiliateButtonText'], 999, 2);
+        add_filter('woocommerce_product_add_to_cart_url', [$this, 'affiliateButtonUrl'], 999, 2);
+        add_filter('woocommerce_loop_add_to_cart_args', [$this, 'affiliateButtonTarget'], 999, 2);
+
+        add_filter('lumizern_central_vibe_data', [$this, 'defaultCentralVibeData']);
+    }
+
+    public function themeSetup(): void
+    {
+        load_theme_textdomain('lumizern-vibe', get_template_directory() . '/languages');
+        add_theme_support('title-tag');
+        add_theme_support('post-thumbnails');
+        add_theme_support('woocommerce');
+        add_theme_support('html5', ['search-form', 'comment-form', 'comment-list', 'gallery', 'caption']);
+
+        register_nav_menus([
+            'primary' => __('Primary Navigation', 'lumizern-vibe'),
+            'footer' => __('Footer Navigation', 'lumizern-vibe'),
+        ]);
+    }
+
+    public function enqueueAssets(): void
+    {
+        if (is_admin()) {
+            return;
+        }
+
+        wp_enqueue_style('lumizern-main', get_stylesheet_uri(), [], $this->version);
+
+        $css_paths = [
+            '/assets/css/lumizern-2026.css',
+            '/theme/assets/css/lumizern-2026.css',
+        ];
+
+        foreach ($css_paths as $path) {
+            $file = get_stylesheet_directory() . $path;
+            if (file_exists($file)) {
+                wp_enqueue_style('lumizern-2026', get_stylesheet_directory_uri() . $path, ['lumizern-main'], (string) filemtime($file));
+                break;
+            }
+        }
+
+        $js_paths = [
+            '/assets/js/lumizern-2026.js',
+            '/theme/assets/js/lumizern-2026.js',
+        ];
+
+        foreach ($js_paths as $path) {
+            $file = get_stylesheet_directory() . $path;
+            if (file_exists($file)) {
+                wp_enqueue_script('lumizern-2026', get_stylesheet_directory_uri() . $path, [], (string) filemtime($file), true);
+                break;
+            }
+        }
+
+        if (wp_script_is('lumizern-2026', 'enqueued')) {
+            wp_localize_script('lumizern-2026', 'lumizernConfig', [
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('lumizern_2025_nonce'),
+                'quiz_profile_nonce' => wp_create_nonce('lumizern_quiz_profile_nonce'),
+            ]);
+        }
+    }
+
+    public function registerTaxonomyAndPostTypes(): void
+    {
+        register_taxonomy('vibe', ['product', 'post', 'affiliate_post'], [
+            'label' => __('Vibes', 'lumizern-vibe'),
+            'public' => true,
+            'hierarchical' => true,
+            'show_ui' => true,
+            'show_admin_column' => true,
+            'show_in_rest' => true,
+            'rewrite' => ['slug' => 'vibe', 'with_front' => false, 'hierarchical' => true],
+        ]);
+
+        register_post_type('affiliate_post', [
+            'labels' => [
+                'name' => __('Affiliate Posts', 'lumizern-vibe'),
+                'singular_name' => __('Affiliate Post', 'lumizern-vibe'),
+            ],
+            'public' => true,
+            'has_archive' => true,
+            'taxonomies' => ['vibe', 'category'],
+            'supports' => ['title', 'editor', 'thumbnail', 'excerpt'],
+            'rewrite' => ['slug' => 'affiliate-guides'],
+            'show_in_rest' => true,
+        ]);
+
+        $this->createDefaultVibesIfNeeded();
+    }
+
+    private function createDefaultVibesIfNeeded(): void
+    {
+        if (get_option('lumizern_default_vibes_created') === 'yes') {
+            return;
+        }
+
+        foreach (lumizern_get_vibe_registry() as $slug => $data) {
+            if (!term_exists($slug, 'vibe')) {
+                wp_insert_term($data['name'], 'vibe', ['slug' => $slug]);
+            }
+        }
+
+        update_option('lumizern_default_vibes_created', 'yes');
+    }
+
+    public function getVibeProducts(): void
+    {
+        check_ajax_referer('lumizern_2025_nonce', 'nonce');
+
+        $vibe_slug = sanitize_text_field($_POST['vibe_slug'] ?? '');
+        $paged = max(1, absint($_POST['paged'] ?? 1));
+
+        if ($vibe_slug === '') {
+            wp_send_json_error(['message' => 'No vibe specified']);
+        }
+
+        $query = new WP_Query([
+            'post_type' => 'product',
+            'post_status' => 'publish',
+            'posts_per_page' => 15,
+            'paged' => $paged,
+            'tax_query' => [[
+                'taxonomy' => 'vibe',
+                'field' => 'slug',
+                'terms' => $vibe_slug,
+            ]],
+        ]);
+
+        $products = [];
+        while ($query->have_posts()) {
+            $query->the_post();
+            $product = wc_get_product(get_the_ID());
+            if (!$product) {
+                continue;
+            }
+
+            $products[] = [
+                'id' => $product->get_id(),
+                'title' => $product->get_name(),
+                'price' => $product->get_price_html(),
+                'image' => wp_get_attachment_image_url($product->get_image_id(), 'medium') ?: wc_placeholder_img_src('medium'),
+                'permalink' => get_permalink(),
+                'vibes' => wp_get_post_terms($product->get_id(), 'vibe', ['fields' => 'names']),
+            ];
+        }
+        wp_reset_postdata();
+
+        wp_send_json_success([
+            'products' => $products,
+            'has_more' => $paged < $query->max_num_pages,
+            'next_page' => $paged + 1,
+            'current_page' => $paged,
+            'total_pages' => (int) $query->max_num_pages,
+        ]);
+    }
+
+
+    public function defaultCentralVibeData(array $data): array
+    {
+        if (!empty($data)) {
+            return $data;
+        }
+
+        $registry = lumizern_get_vibe_registry();
+        $defaults = [];
+
+        foreach ($registry as $slug => $vibe) {
+            $defaults[$slug] = [
+                'emoji' => $vibe['emoji'],
+                'name' => $vibe['name'],
+                'color' => $vibe['color'],
+                'description' => '',
+                'characteristics' => [],
+                'shopUrl' => $vibe['url'],
+                'shopDescription' => '',
+                'benefits' => [],
+                'products' => [],
+            ];
+        }
+
+        return $defaults;
+    }
+
+    public function saveQuizProfile(): void
+    {
+        check_ajax_referer('lumizern_quiz_profile_nonce', 'nonce');
+
+        $primary = sanitize_text_field($_POST['primary'] ?? '');
+        $secondary = sanitize_text_field($_POST['secondary'] ?? '');
+        $tertiary = sanitize_text_field($_POST['tertiary'] ?? '');
+        $email_opt_in = !empty($_POST['email_opt_in']);
+
+        $registry = lumizern_get_vibe_registry();
+        if (!isset($registry[$primary])) {
+            wp_send_json_error(['message' => 'Invalid vibe profile']);
+        }
+
+        $profile = [
+            'primary' => $primary,
+            'secondary' => isset($registry[$secondary]) ? $secondary : '',
+            'tertiary' => isset($registry[$tertiary]) ? $tertiary : '',
+            'email_opt_in' => $email_opt_in ? 'yes' : 'no',
+            'saved_at' => current_time('mysql'),
+        ];
+
+        if (is_user_logged_in()) {
+            update_user_meta(get_current_user_id(), 'lumizern_vibe_profile', $profile);
+        }
+
+        setcookie('user_vibe_result', $profile['primary'], [
+            'expires' => time() + MONTH_IN_SECONDS,
+            'path' => COOKIEPATH ?: '/',
+            'domain' => COOKIE_DOMAIN,
+            'secure' => is_ssl(),
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+
+        wp_send_json_success(['profile' => $profile]);
+    }
+
+    public static function getVibeImageUrl(string $slug): string
+    {
+        $exts = ['webp', 'jpg', 'jpeg', 'png'];
+        foreach ($exts as $ext) {
+            $path = get_stylesheet_directory() . '/assets/vibes/' . $slug . '.' . $ext;
+            if (file_exists($path)) {
+                return get_stylesheet_directory_uri() . '/assets/vibes/' . $slug . '.' . $ext;
+            }
+        }
+
+        return get_stylesheet_directory_uri() . '/assets/placeholder-vibe.jpg';
+    }
+
+    public function addAffiliateFields(): void
+    {
+        woocommerce_wp_checkbox([
+            'id' => '_is_affiliate',
+            'label' => __('Affiliate / External Product', 'lumizern-vibe'),
+        ]);
+
+        woocommerce_wp_text_input([
+            'id' => '_affiliate_url',
+            'label' => __('Affiliate URL', 'lumizern-vibe'),
+            'placeholder' => 'https://example.com/product',
+            'desc_tip' => true,
+        ]);
+    }
+
+    public function saveAffiliateFields(int $post_id): void
+    {
+        $is_affiliate = isset($_POST['_is_affiliate']) ? 'yes' : 'no';
+        update_post_meta($post_id, '_is_affiliate', $is_affiliate);
+
+        if ($is_affiliate === 'yes') {
+            update_post_meta($post_id, '_affiliate_url', esc_url_raw(wp_unslash($_POST['_affiliate_url'] ?? '')));
+            update_post_meta($post_id, '_price', '');
+        }
+    }
+
+    public function affiliateBadge(): void
+    {
+        global $product;
+        if ($product && get_post_meta($product->get_id(), '_is_affiliate', true) === 'yes') {
+            echo '<span class="onsale affiliate-badge">Affiliate</span>';
+        }
+    }
+
+    public function affiliateButtonText(string $text, WC_Product $product): string
+    {
+        if (get_post_meta($product->get_id(), '_is_affiliate', true) === 'yes') {
+            return 'View Product →';
+        }
+
+        return $text;
+    }
+
+    public function affiliateButtonUrl(string $url, WC_Product $product): string
+    {
+        if (get_post_meta($product->get_id(), '_is_affiliate', true) === 'yes') {
+            return (string) get_post_meta($product->get_id(), '_affiliate_url', true);
+        }
+
+        return $url;
+    }
+
+    public function affiliateButtonTarget(array $args, WC_Product $product): array
+    {
+        if (get_post_meta($product->get_id(), '_is_affiliate', true) === 'yes') {
+            $args['attributes']['target'] = '_blank';
+            $args['attributes']['rel'] = 'nofollow sponsored';
+        }
+
+        return $args;
+    }
+}
+
+LumizernVibe2025::getInstance();
+
+function lumizern_get_vibe_registry(): array
+{
+    return [
+        'cozy-cocoon' => ['name' => 'Cozy Cocoon', 'color' => '#FF6B6B', 'emoji' => '🛋️', 'url' => '/vibe/cozy-cocoon'],
+        'power-play' => ['name' => 'Power Play', 'color' => '#4ECDC4', 'emoji' => '💼', 'url' => '/vibe/power-play'],
+        'aesthetic-curator' => ['name' => 'Aesthetic Curator', 'color' => '#DDA0DD', 'emoji' => '✨', 'url' => '/vibe/aesthetic-curator'],
+        'zen-chill' => ['name' => 'Zen Chill', 'color' => '#FFEAA7', 'emoji' => '🧘', 'url' => '/vibe/zen-chill'],
+        'creative-hustle' => ['name' => 'Creative Hustle', 'color' => '#45B7D1', 'emoji' => '🎨', 'url' => '/vibe/creative-hustle'],
+        'pawfectionist' => ['name' => 'Pawfectionist', 'color' => '#96CEB4', 'emoji' => '🐾', 'url' => '/vibe/pawfectionist'],
+    ];
+}
+
+function lumizern_get_vibe_color(string $slug = ''): string
+{
+    $registry = lumizern_get_vibe_registry();
+    return $registry[$slug]['color'] ?? '#8884d8';
+}
+
+function lumizern_get_product_fulfillment_label(int $product_id): string
+{
+    if (get_post_meta($product_id, '_is_affiliate', true) === 'yes') {
+        return __('Affiliate pick', 'lumizern-vibe');
+    }
+
+    if (get_post_meta($product_id, '_is_dropship', true) === 'yes') {
+        return __('Ships from partner', 'lumizern-vibe');
+    }
+
+    return __('Ships from us', 'lumizern-vibe');
+}

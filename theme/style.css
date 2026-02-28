@@ -1,0 +1,183 @@
+/*
+Theme Name: Lumizern Vibe 2026
+Description: Premium 2026 visual system for vibe-first WooCommerce.
+Version: 3.2.0
+Text Domain: lumizern-vibe
+*/
+
+@import url('./assets/css/lumizern-2026.css');
+
+:root {
+  --lz-bg: #0f1117;
+  --lz-surface: #171a22;
+  --lz-surface-2: #1f2430;
+  --lz-text: #f4f6fb;
+  --lz-text-muted: #b5bfd3;
+  --lz-primary: #8a2be2;
+  --lz-secondary: #00d4ff;
+  --lz-success: #2dd4bf;
+  --lz-danger: #ff5d8f;
+  --lz-ring: 0 0 0 3px rgba(138,43,226,.28);
+  --lz-shadow-soft: 0 16px 48px rgba(0,0,0,.28);
+  --lz-shadow-hard: 0 24px 80px rgba(0,0,0,.38);
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(138,43,226,.16), transparent 55%),
+    radial-gradient(900px 500px at 90% 0%, rgba(0,212,255,.10), transparent 55%),
+    var(--lz-bg);
+  color: var(--lz-text);
+}
+
+.container-vibe,
+.container,
+.lz-header-inner,
+.footer-content {
+  max-width: 1320px;
+}
+
+/* premium nav */
+.lz-header {
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  background: rgba(14,16,21,.72);
+  backdrop-filter: blur(16px) saturate(140%);
+}
+.lz-menu a,
+.lz-icon-btn {
+  color: var(--lz-text);
+}
+.lz-menu a:hover,
+.lz-icon-btn:hover {
+  color: #fff;
+}
+
+/* refined cards */
+.product,
+.trending-product-card,
+.vibe-card,
+.clean-card,
+.guide-card,
+.checkout-section-modern,
+.vibe-cart-wrapper,
+.vibe-checkout-wrapper {
+  background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  border: 1px solid rgba(255,255,255,.1);
+  box-shadow: var(--lz-shadow-soft);
+}
+
+.product:hover,
+.trending-product-card:hover,
+.vibe-card:hover,
+.clean-card:hover,
+.guide-card:hover {
+  box-shadow: var(--lz-shadow-hard);
+  border-color: rgba(255,255,255,.22);
+}
+
+/* product cards readability */
+.product .woocommerce-loop-product__title,
+.trending-product-title,
+.card-info h3,
+.vibe-title,
+.product-info h3 {
+  color: #fff;
+}
+.product .price,
+.trending-product-price,
+.card-info .price,
+.product-info .price {
+  color: #e6d8ff;
+}
+
+/* call-to-action polish */
+.button,
+.btn-vibe-primary,
+.vibe-btn,
+.nav-btn-enhanced,
+.action-btn-primary,
+#place_order {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.button::before,
+.btn-vibe-primary::before,
+.vibe-btn::before,
+.nav-btn-enhanced::before,
+.action-btn-primary::before,
+#place_order::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(120deg, rgba(255,255,255,.24), rgba(255,255,255,0) 30%);
+  transform: translateX(-120%);
+  transition: transform .6s ease;
+  z-index: -1;
+}
+.button:hover::before,
+.btn-vibe-primary:hover::before,
+.vibe-btn:hover::before,
+.nav-btn-enhanced:hover::before,
+.action-btn-primary:hover::before,
+#place_order:hover::before {
+  transform: translateX(120%);
+}
+
+/* trust / hierarchy */
+.trust-badge,
+.trust-badge-2025,
+.trust-badge-checkout {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.12);
+}
+
+/* quiz visual upgrade */
+.quiz-container-enhanced {
+  background:
+    radial-gradient(900px 500px at 15% 5%, rgba(138,43,226,.24), transparent 55%),
+    radial-gradient(900px 500px at 85% 0%, rgba(0,212,255,.20), transparent 55%),
+    #0c0f15;
+}
+.option-content-enhanced {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.15);
+}
+.option-card-enhanced input:checked + .option-content-enhanced {
+  border-color: #b88cff;
+  box-shadow: 0 16px 40px rgba(138,43,226,.32);
+}
+
+/* cart/checkout clarity */
+.vibe-cart-item,
+.woocommerce-checkout-review-order-table tr,
+.shop_table tr {
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.vibe-input,
+.woocommerce form .form-row input.input-text,
+.woocommerce form .form-row textarea,
+.woocommerce form .form-row select {
+  background: rgba(255,255,255,.03);
+  color: #fff;
+  border-color: rgba(255,255,255,.16);
+}
+.woocommerce form .form-row input.input-text:focus,
+.woocommerce form .form-row textarea:focus,
+.woocommerce form .form-row select:focus {
+  box-shadow: var(--lz-ring);
+}
+
+/* reduce noise on small screens */
+@media (max-width: 768px) {
+  .product,
+  .trending-product-card,
+  .vibe-card,
+  .clean-card {
+    box-shadow: 0 10px 24px rgba(0,0,0,.26);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
