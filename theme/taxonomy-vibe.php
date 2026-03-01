@@ -64,6 +64,8 @@ $benefits = $vibe_benefits[$vibe_slug] ?? $vibe_benefits['cozy-cocoon'];
     </div></section>
     <?php endif; ?>
 
+    <?php echo wp_kses_post(lumizern_render_trending_vibe_block($vibe_slug, 4)); ?>
+
     <?php if ($products->have_posts()) : ?>
     <section class="editorial-section"><div class="editorial-grid">
     <?php while ($products->have_posts()) : $products->the_post(); $product = wc_get_product(get_the_ID()); if(!$product) continue;

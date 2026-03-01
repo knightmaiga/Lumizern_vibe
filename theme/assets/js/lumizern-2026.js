@@ -232,10 +232,11 @@ class LumizernVibe {
         });
     }
 
-    handleNewsletterSubmit(e) {
+    async handleNewsletterSubmit(e) {
         e.preventDefault();
         const form = e.target;
         const emailInput = form.querySelector("input[type='email']");
+        const consent = form.querySelector("input[name='consent']");
         const email = emailInput?.value.trim();
         const btn = form.querySelector('button');
 
@@ -245,12 +246,40 @@ class LumizernVibe {
             return;
         }
 
+        if (!consent || !consent.checked) {
+            this.showNotification('Please accept email consent to continue', 'error');
+            return;
+        }
+
         this.showButtonLoading(btn, 'Subscribing...');
-        setTimeout(() => {
-            this.showNotification('Welcome to the Lumizern vibe! 🎉', 'success');
-            form.reset();
+
+        const body = new URLSearchParams({
+            action: 'lumizern_subscribe_newsletter',
+            nonce: (window.lumizernConfig && lumizernConfig.nonce) ? lumizernConfig.nonce : '',
+            email,
+            consent: '1',
+            source: form.dataset.source || 'footer'
+        });
+
+        try {
+            const response = await fetch((window.lumizernConfig && lumizernConfig.ajax_url) ? lumizernConfig.ajax_url : '/wp-admin/admin-ajax.php', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
+                body: body.toString()
+            });
+            const data = await response.json();
+            if (data && data.success) {
+                this.showNotification(data.data?.message || 'Welcome to the Lumizern vibe! 🎉', 'success');
+                form.reset();
+            } else {
+                this.showNotification(data?.data?.message || 'Subscription failed. Please try again.', 'error');
+            }
+        } catch (error) {
+            this.showNotification('Subscription failed. Please try again.', 'error');
+        } finally {
             this.resetButton(btn);
-        }, 1000);
+        }
     }
 
     validateEmail(email) {

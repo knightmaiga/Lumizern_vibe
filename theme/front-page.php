@@ -79,6 +79,17 @@ $user_vibe = isset($_COOKIE['user_vibe_result']) ? sanitize_text_field(wp_unslas
   </section>
   <?php endif; ?>
 
+
+
+  <?php $active_vibe = lumizern_get_active_vibe_slug(); if ($active_vibe) : ?>
+  <section class="trending-section" aria-labelledby="trend-lab-title">
+    <div class="container-vibe">
+      <h2 id="trend-lab-title" class="section-title-vibe"><?php esc_html_e('Trend Lab For Your Vibe', 'lumizern-vibe'); ?></h2>
+      <?php echo wp_kses_post(lumizern_render_trending_vibe_block($active_vibe, 4)); ?>
+    </div>
+  </section>
+  <?php endif; ?>
+
   <section class="trending-section" aria-labelledby="trending-section-title">
     <div class="container-vibe">
       <h2 id="trending-section-title" class="section-title-vibe"><?php esc_html_e('Trending This Week', 'lumizern-vibe'); ?></h2>

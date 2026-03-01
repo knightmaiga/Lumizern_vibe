@@ -172,3 +172,45 @@ This keeps discovery consistent while still allowing users to retake the full qu
 - `docs/launch-checklist.md`
 - `docs/seo-discoverability-plan.md`
 - `docs/affiliate-dropship-ops.md`
+
+
+## 15) 90-Day Monetization Execution Roadmap
+
+### Days 1–30 (Foundation + Authority)
+- Lock vibe positioning and remove non-fit products.
+- Keep IA clear: Shop / Vibes / Quiz / Guides / About / Contact.
+- Publish 3 SEO guides per week (long-tail intent by vibe).
+- Launch quiz + profile + newsletter capture.
+
+### Days 31–60 (Traffic + Validation)
+- Continue 2–3 SEO posts weekly.
+- Launch Pinterest moodboard distribution and short-form social snippets.
+- Track quiz completion, outbound affiliate CTR, add-to-cart rates.
+- Run conversion iteration on hero clarity, CTA hierarchy, and page speed.
+
+### Days 61–90 (Scale + Revenue)
+- Expand vibe collections and “top picks” merchandising.
+- Run segmented email automation by vibe profile.
+- Use Vibe Trend Lab outputs to refresh catalog weekly.
+- Introduce paid promotion only after organic conversion signal is proven.
+
+## 16) Vibe Trend Lab App (Built-in)
+
+- Admin tool path: **Tools → Vibe Trend Lab**
+- Purpose: surface popularity-based top products by each vibe for merchandising decisions.
+- Front-end helper: `lumizern_render_trending_vibe_block($vibe_slug, $limit)`
+- Shortcode: `[lumizern_trending_vibe vibe="cozy-cocoon" limit="4"]`
+
+## 17) Newsletter + Email Capture (Built-in)
+
+- AJAX endpoint: `lumizern_subscribe_newsletter`
+- Lead storage: `lumizern_lead` post type (Tools menu)
+- Consent-required form included in footer.
+- Source + vibe context metadata stored for segmentation.
+
+## 18) Performance + Security Notes
+
+- Keep Woo dynamic pages excluded from full-page cache (`/cart`, `/checkout`, `/my-account`, `wc-ajax`).
+- Enforce HTTPS everywhere, enable WAF/rate limiting at edge (Cloudflare DNS/CDN + security only).
+- Retain nonce checks for all AJAX actions; sanitize and escape all user inputs/outputs.
+- Regularly prune stale products to preserve premium catalog quality and brand trust.

@@ -509,3 +509,160 @@ function lumizern_vibe_profile_shortcode(): string
     return '<a class="button" href="' . esc_url($url) . '">' . esc_html__('Open My Vibe Profile', 'lumizern-vibe') . '</a>';
 }
 add_shortcode('lumizern_vibe_profile', 'lumizern_vibe_profile_shortcode');
+
+
+function lumizern_register_lead_post_type(): void
+{
+    register_post_type('lumizern_lead', [
+        'labels' => [
+            'name' => __('Newsletter Leads', 'lumizern-vibe'),
+            'singular_name' => __('Newsletter Lead', 'lumizern-vibe'),
+        ],
+        'public' => false,
+        'show_ui' => true,
+        'show_in_menu' => 'tools.php',
+        'supports' => ['title'],
+        'capability_type' => 'post',
+        'map_meta_cap' => true,
+    ]);
+}
+add_action('init', 'lumizern_register_lead_post_type');
+
+function lumizern_subscribe_newsletter(): void
+{
+    check_ajax_referer('lumizern_2025_nonce', 'nonce');
+
+    $email = isset($_POST['email']) ? sanitize_email(wp_unslash($_POST['email'])) : '';
+    $consent = !empty($_POST['consent']);
+
+    if (!is_email($email) || !$consent) {
+        wp_send_json_error(['message' => __('Enter a valid email and accept consent.', 'lumizern-vibe')], 400);
+    }
+
+    $existing = get_posts([
+        'post_type' => 'lumizern_lead',
+        'post_status' => 'publish',
+        'fields' => 'ids',
+        'title' => $email,
+        'posts_per_page' => 1,
+    ]);
+
+    if (empty($existing)) {
+        $lead_id = wp_insert_post([
+            'post_type' => 'lumizern_lead',
+            'post_status' => 'publish',
+            'post_title' => $email,
+        ]);
+
+        if (!is_wp_error($lead_id) && $lead_id) {
+            update_post_meta($lead_id, 'source', sanitize_text_field($_POST['source'] ?? 'site'));
+            update_post_meta($lead_id, 'vibe', lumizern_get_active_vibe_slug());
+            update_post_meta($lead_id, 'consent_at', current_time('mysql'));
+        }
+    }
+
+    wp_send_json_success(['message' => __('You are in. Your premium vibe updates are on the way.', 'lumizern-vibe')]);
+}
+add_action('wp_ajax_lumizern_subscribe_newsletter', 'lumizern_subscribe_newsletter');
+add_action('wp_ajax_nopriv_lumizern_subscribe_newsletter', 'lumizern_subscribe_newsletter');
+
+function lumizern_get_trending_vibe_products(string $vibe_slug, int $limit = 6): array
+{
+    if (!function_exists('wc_get_products') || $vibe_slug === '') {
+        return [];
+    }
+
+    $cache_key = 'lumizern_trending_' . md5($vibe_slug . '|' . $limit);
+    $cached = get_transient($cache_key);
+    if (is_array($cached)) {
+        return $cached;
+    }
+
+    $products = wc_get_products([
+        'limit' => $limit,
+        'status' => 'publish',
+        'orderby' => 'popularity',
+        'tax_query' => [[
+            'taxonomy' => 'vibe',
+            'field' => 'slug',
+            'terms' => $vibe_slug,
+        ]],
+    ]);
+
+    set_transient($cache_key, $products, HOUR_IN_SECONDS);
+    return $products;
+}
+
+function lumizern_render_trending_vibe_block(string $vibe_slug, int $limit = 4): string
+{
+    $registry = lumizern_get_vibe_registry();
+    if (!isset($registry[$vibe_slug])) {
+        return '';
+    }
+
+    $items = lumizern_get_trending_vibe_products($vibe_slug, $limit);
+    if (empty($items)) {
+        return '';
+    }
+
+    ob_start();
+    ?>
+    <section class="vibe-trend-lab" aria-label="<?php echo esc_attr($registry[$vibe_slug]['name']); ?> trend lab">
+      <h3><?php echo esc_html($registry[$vibe_slug]['emoji'] . ' ' . sprintf(__('Trend Lab: %s', 'lumizern-vibe'), $registry[$vibe_slug]['name'])); ?></h3>
+      <div class="premium-trending-grid">
+        <?php foreach ($items as $product) : ?>
+          <a href="<?php echo esc_url($product->get_permalink()); ?>" class="trending-product-card">
+            <div class="trending-image-wrap"><?php echo $product->get_image('woocommerce_single'); ?></div>
+            <div class="trending-product-info"><h4 class="trending-product-title"><?php echo esc_html($product->get_name()); ?></h4><div class="trending-product-price"><?php echo wp_kses_post($product->get_price_html()); ?></div></div>
+          </a>
+        <?php endforeach; ?>
+      </div>
+    </section>
+    <?php
+    return (string) ob_get_clean();
+}
+
+function lumizern_trending_vibe_shortcode($atts): string
+{
+    $atts = shortcode_atts(['vibe' => lumizern_get_active_vibe_slug(), 'limit' => 4], $atts, 'lumizern_trending_vibe');
+    return lumizern_render_trending_vibe_block(sanitize_title((string) $atts['vibe']), max(1, absint($atts['limit'])));
+}
+add_shortcode('lumizern_trending_vibe', 'lumizern_trending_vibe_shortcode');
+
+function lumizern_register_trend_lab_admin_page(): void
+{
+    add_submenu_page(
+        'tools.php',
+        __('Vibe Trend Lab', 'lumizern-vibe'),
+        __('Vibe Trend Lab', 'lumizern-vibe'),
+        'manage_options',
+        'lumizern-vibe-trend-lab',
+        'lumizern_render_trend_lab_admin_page'
+    );
+}
+add_action('admin_menu', 'lumizern_register_trend_lab_admin_page');
+
+function lumizern_render_trend_lab_admin_page(): void
+{
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+
+    echo '<div class="wrap"><h1>' . esc_html__('Vibe Trend Lab', 'lumizern-vibe') . '</h1>';
+    echo '<p>' . esc_html__('Top-performing products by vibe (popularity-sorted) to guide merchandising decisions.', 'lumizern-vibe') . '</p>';
+
+    foreach (lumizern_get_vibe_registry() as $slug => $vibe) {
+        $products = lumizern_get_trending_vibe_products($slug, 5);
+        echo '<h2>' . esc_html($vibe['emoji'] . ' ' . $vibe['name']) . '</h2><ol>';
+        if (empty($products)) {
+            echo '<li>' . esc_html__('No products found for this vibe yet.', 'lumizern-vibe') . '</li>';
+        } else {
+            foreach ($products as $product) {
+                echo '<li><a href="' . esc_url(get_edit_post_link($product->get_id())) . '">' . esc_html($product->get_name()) . '</a> · ' . wp_kses_post($product->get_price_html()) . '</li>';
+            }
+        }
+        echo '</ol>';
+    }
+
+    echo '</div>';
+}

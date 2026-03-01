@@ -195,3 +195,12 @@ body {
 .profile-context-bar .container { display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
 .profile-match-note { margin: .75rem 0 0; color: rgba(255,255,255,.88); }
 .lumizern-account-vibe .vibe-chip-grid { margin: 1rem 0; }
+
+/* Revenue + visibility upgrades */
+.footer-newsletter { max-width: 380px; }
+.footer-newsletter .newsletter-form { display: grid; gap: .55rem; margin-top: .6rem; }
+.footer-newsletter input[type="email"] { border-radius: 10px; padding: .65rem .75rem; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.04); color: #fff; }
+.footer-newsletter label { font-size: .84rem; opacity: .9; }
+.vibe-trend-lab { margin-top: 1.2rem; }
+.vibe-trend-lab h3 { margin-bottom: .75rem; }
+.profile-context-bar a { font-weight: 700; }

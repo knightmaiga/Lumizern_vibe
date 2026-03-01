@@ -25,6 +25,17 @@
         ?>
       </ul>
     </div>
+
+    <div class="footer-newsletter">
+      <h3 class="footer-title"><?php esc_html_e('Vibe Insider', 'lumizern-vibe'); ?></h3>
+      <p><?php esc_html_e('Get premium trend drops, curated picks, and vibe-based buying guides.', 'lumizern-vibe'); ?></p>
+      <form class="newsletter-form" data-source="footer" novalidate>
+        <label for="footer-news-email" class="screen-reader-text"><?php esc_html_e('Email address', 'lumizern-vibe'); ?></label>
+        <input id="footer-news-email" type="email" name="email" placeholder="you@example.com" required>
+        <label><input type="checkbox" name="consent" value="1" required> <?php esc_html_e('I agree to receive email updates and offers.', 'lumizern-vibe'); ?></label>
+        <button type="submit" class="button"><?php esc_html_e('Join now', 'lumizern-vibe'); ?></button>
+      </form>
+    </div>
   </div>
   <div class="footer-bottom">
     <p>&copy; <?php echo esc_html(date('Y')); ?> <?php bloginfo('name'); ?>.</p>
