@@ -24,7 +24,7 @@ do_action('woocommerce_before_cart');
             <div class="empty-cart-content">
                 <h2>Your Vibe Cart is Empty</h2>
                 <p class="subtitle">Curate your energy. Build your empire.</p>
-                <a href="<?php echo esc_url(wc_get_page_permalink('shop')); ?>" class="vibe-btn vibe-btn-primary">
+                <a href="<?php echo esc_url(wc_get_page_permalink('shop')); ?>" class="vibe-btn vibe-btn-primary lz-btn">
                     <span class="btn-icon">Sparkles</span> Explore All Vibes
                 </a>
                 <div class="quick-vibe-links">
@@ -151,11 +151,11 @@ do_action('woocommerce_before_cart');
                 <?php if (wc_coupons_enabled()) : ?>
                     <div class="coupon-input-group">
                         <input type="text" name="coupon_code" placeholder="Coupon code" id="coupon_code" class="vibe-input" />
-                        <button type="submit" class="vibe-btn vibe-btn-secondary" name="apply_coupon">Apply</button>
+                        <button type="submit" class="vibe-btn vibe-btn-secondary lz-btn lz-btn-ghost" name="apply_coupon">Apply</button>
                     </div>
                 <?php endif; ?>
 
-                <button type="submit" class="vibe-btn vibe-btn-outline" name="update_cart">Update Cart</button>
+                <button type="submit" class="vibe-btn vibe-btn-outline lz-btn lz-btn-ghost" name="update_cart">Update Cart</button>
             </div>
 
             <?php wp_nonce_field('woocommerce-cart', 'woocommerce-cart-nonce'); ?>

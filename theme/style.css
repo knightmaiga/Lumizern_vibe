@@ -192,7 +192,8 @@ body {
 .vibe-profile-actions { margin-top: 1rem; display: flex; gap: .75rem; flex-wrap: wrap; align-items: center; }
 .vibe-save-status { min-height: 1.25rem; opacity: .85; }
 .profile-context-bar { padding: .65rem 0; background: rgba(138,43,226,.12); border-block: 1px solid rgba(138,43,226,.22); }
-.profile-context-bar .container { display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
+.profile-context-bar .container,
+.profile-context-bar .container-vibe { display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
 .profile-match-note { margin: .75rem 0 0; color: rgba(255,255,255,.88); }
 .lumizern-account-vibe .vibe-chip-grid { margin: 1rem 0; }
 

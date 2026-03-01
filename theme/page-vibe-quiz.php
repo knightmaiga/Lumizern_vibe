@@ -116,22 +116,7 @@ $central_vibe_data = apply_filters('lumizern_central_vibe_data', [
   </div>
 </div>
 
-<style>
-.quiz-container-enhanced{min-height:100vh;background:#1d1d1f;color:#fff;padding-bottom:60px}
-.container-enhanced{max-width:980px;margin:0 auto;padding:20px}
-.quiz-title-enhanced{font-size:clamp(2rem,5vw,3.5rem)}
-.text-gradient-enhanced{background:linear-gradient(135deg,#8A2BE2,#4ECDC4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.quiz-step-enhanced{display:none}.quiz-step-enhanced.active{display:block}
-.options-grid-enhanced{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
-.option-content-enhanced{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:18px}
-.option-card-enhanced input:checked + .option-content-enhanced{border-color:#8A2BE2;background:rgba(138,43,226,.2)}
-.quiz-navigation-enhanced{display:flex;gap:12px;margin-top:18px;align-items:center;flex-wrap:wrap}
-.quiz-optin{font-size:.92rem;opacity:.9;display:flex;align-items:center;gap:8px;min-width:260px}
-.nav-btn-enhanced{padding:10px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.07);color:#fff}
-.submit-btn-enhanced{background:#8A2BE2;border-color:#8A2BE2}
-.hidden{display:none !important}
-.quiz-result-enhanced{margin-top:20px;padding:20px;background:rgba(255,255,255,.05);border-radius:16px}
-</style>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {

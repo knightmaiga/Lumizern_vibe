@@ -136,7 +136,7 @@ $vibe_data = $vibe_map[$user_vibe] ?? null;
                             <div class="form-row place-order">
                                 <?php wc_get_template('checkout/terms.php'); ?>
                                 <?php do_action('woocommerce_review_order_before_submit'); ?>
-                                <?php echo apply_filters('woocommerce_order_button_html', '<button type="submit" class="button vibe-btn-primary alt' . esc_attr(wc_wp_theme_get_element_class_name('button') ? ' ' . wc_wp_theme_get_element_class_name('button') : '') . '" name="woocommerce_checkout_place_order" id="place_order" data-value="' . esc_attr($order_button_text) . '">' . esc_html($order_button_text) . '</button>'); ?>
+                                <?php echo apply_filters('woocommerce_order_button_html', '<button type="submit" class="button vibe-btn-primary lz-btn alt' . esc_attr(wc_wp_theme_get_element_class_name('button') ? ' ' . wc_wp_theme_get_element_class_name('button') : '') . '" name="woocommerce_checkout_place_order" id="place_order" data-value="' . esc_attr($order_button_text) . '">' . esc_html($order_button_text) . '</button>'); ?>
                                 <?php do_action('woocommerce_review_order_after_submit'); ?>
                                 <?php wp_nonce_field('woocommerce-process_checkout', 'woocommerce-process-checkout-nonce'); ?>
                             </div>

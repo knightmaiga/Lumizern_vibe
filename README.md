@@ -174,6 +174,7 @@ This keeps discovery consistent while still allowing users to retake the full qu
 - `docs/affiliate-dropship-ops.md`
 - `docs/production-readiness-checklist.md`
 - `docs/design-sprint-plan-2026.md`
+- `docs/launch-day-implementation-runbook.md`
 
 Run fast repo preflight:
 
