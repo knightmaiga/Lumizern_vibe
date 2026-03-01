@@ -42,8 +42,9 @@ Avoid plugin bloat; prefer code-level customization where practical.
   - `LumizernVibe2025` singleton
   - registers taxonomy/CPT
   - enqueue assets
-  - AJAX endpoint `get_vibe_products`
+  - AJAX endpoints `get_vibe_products` and `lumizern_save_quiz_profile`
   - affiliate product behavior hooks
+  - vibe profile personalization helpers
 - Templates
   - `front-page.php`
   - `taxonomy-vibe.php`
@@ -93,9 +94,13 @@ When affiliate is enabled:
 ## 8) AJAX Endpoints
 
 - `get_vibe_products`
-  - nonce: `lumizern_vibe_nonce`
+  - nonce: `lumizern_2025_nonce`
   - input: `vibe_slug`, `paged`
   - output: products list + pagination metadata
+- `lumizern_save_quiz_profile`
+  - nonce: `lumizern_quiz_profile_nonce`
+  - input: `primary`, `secondary`, `tertiary`, `email_opt_in`
+  - output: normalized profile + cookie/user-meta sync
 
 ## 9) Deployment (Staging → Production)
 
@@ -106,6 +111,32 @@ When affiliate is enabled:
    - `/cart/`, `/checkout/`, `/my-account/`
    - `wc-ajax` endpoints
 5. Promote to production.
+
+
+## 9A) Vibe Profile Personalization
+
+- New page template: `theme/page-vibe-profile.php` (**Vibe Profile**)
+- New account endpoint: `/my-account/vibe-profile/`
+- Profile values are persisted through:
+  - user meta (`lumizern_vibe_profile`) for logged-in users
+  - secure cookie (`user_vibe_result`) for guests
+- Personalization is used in:
+  - homepage recommendations
+  - shop context bar
+  - single-product profile match note
+  - taxonomy profile reminder module
+
+This keeps discovery consistent while still allowing users to retake the full quiz.
+
+## 9B) Revenue + Trust Upgrades Included
+
+- Fulfillment labels now standardize monetization clarity:
+  - `Affiliate pick`
+  - `Ships from partner`
+  - `Ships from us`
+- Added profile-first cross-sell rails to improve session depth.
+- Added conversion trust modules (shipping/returns/security language) on PDP flows.
+- Affiliate outbound behavior remains compliant (`nofollow sponsored`, new tab).
 
 ## 10) Cloudflare (DNS/CDN only)
 

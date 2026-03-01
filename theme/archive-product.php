@@ -12,6 +12,14 @@ do_action('woocommerce_before_main_content');
   <?php endforeach; ?>
   </div></section>
 
+
+  <?php $active_vibe = lumizern_get_active_vibe_slug(); if ($active_vibe !== '' && isset(lumizern_get_vibe_registry()[$active_vibe])) : $active_vibe_data = lumizern_get_vibe_registry()[$active_vibe]; ?>
+  <section class="profile-context-bar"><div class="container">
+    <p><?php echo esc_html($active_vibe_data['emoji'] . ' ' . sprintf(__('Personalized for your %s vibe', 'lumizern-vibe'), $active_vibe_data['name'])); ?></p>
+    <a href="<?php echo esc_url(function_exists('wc_get_account_endpoint_url') ? wc_get_account_endpoint_url('vibe-profile') : home_url('/vibe-profile/')); ?>"><?php esc_html_e('Change profile', 'lumizern-vibe'); ?></a>
+  </div></section>
+  <?php endif; ?>
+
   <section class="clean-products"><div class="container">
   <?php if (woocommerce_product_loop()) : ?><div class="clean-grid">
     <?php while (have_posts()) : the_post(); global $product; if(!is_a($product,'WC_Product')) continue;

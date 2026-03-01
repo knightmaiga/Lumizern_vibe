@@ -181,3 +181,17 @@ body {
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* Vibe Profile personalization layer */
+.lumizern-vibe-profile-page { padding: 2rem 0 4rem; }
+.vibe-profile-hero h1 { font-size: clamp(2rem, 4vw, 3rem); margin-bottom: .75rem; }
+.vibe-profile-controls, .vibe-profile-recommendations { margin-top: 2rem; }
+.vibe-chip-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .75rem; }
+.vibe-chip { border: 1px solid rgba(255,255,255,.2); border-radius: 999px; padding: .7rem 1rem; background: rgba(255,255,255,.04); color: inherit; cursor: pointer; }
+.vibe-chip.is-active { border-color: #8A2BE2; box-shadow: 0 0 0 2px rgba(138,43,226,.2); }
+.vibe-profile-actions { margin-top: 1rem; display: flex; gap: .75rem; flex-wrap: wrap; align-items: center; }
+.vibe-save-status { min-height: 1.25rem; opacity: .85; }
+.profile-context-bar { padding: .65rem 0; background: rgba(138,43,226,.12); border-block: 1px solid rgba(138,43,226,.22); }
+.profile-context-bar .container { display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
+.profile-match-note { margin: .75rem 0 0; color: rgba(255,255,255,.88); }
+.lumizern-account-vibe .vibe-chip-grid { margin: 1rem 0; }

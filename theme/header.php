@@ -35,6 +35,7 @@
         <span aria-hidden="true">⌕</span>
       </button>
       <?php if (function_exists('wc_get_page_id')) : ?>
+      <a href="<?php echo esc_url(function_exists('wc_get_account_endpoint_url') ? wc_get_account_endpoint_url('vibe-profile') : home_url('/vibe-profile/')); ?>" class="lz-icon-btn" aria-label="<?php esc_attr_e('My vibe profile', 'lumizern-vibe'); ?>">✨</a>
       <a href="<?php echo esc_url(get_permalink(wc_get_page_id('myaccount'))); ?>" class="lz-icon-btn" aria-label="<?php esc_attr_e('Account', 'lumizern-vibe'); ?>">👤</a>
       <a href="<?php echo esc_url(wc_get_cart_url()); ?>" class="lz-icon-btn lz-cart" aria-label="<?php esc_attr_e('Cart', 'lumizern-vibe'); ?>">🛒
         <span class="lz-cart-count"><?php echo function_exists('WC') && WC()->cart ? esc_html(WC()->cart->get_cart_contents_count()) : '0'; ?></span>

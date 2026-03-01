@@ -376,3 +376,136 @@ function lumizern_get_product_fulfillment_label(int $product_id): string
 
     return __('Ships from us', 'lumizern-vibe');
 }
+
+
+function lumizern_get_active_vibe_slug(): string
+{
+    $registry = lumizern_get_vibe_registry();
+
+    if (is_user_logged_in()) {
+        $profile = get_user_meta(get_current_user_id(), 'lumizern_vibe_profile', true);
+        if (is_array($profile) && !empty($profile['primary']) && isset($registry[$profile['primary']])) {
+            return $profile['primary'];
+        }
+    }
+
+    $cookie = isset($_COOKIE['user_vibe_result']) ? sanitize_text_field(wp_unslash($_COOKIE['user_vibe_result'])) : '';
+    return isset($registry[$cookie]) ? $cookie : '';
+}
+
+function lumizern_get_vibe_profile_data(): array
+{
+    $active = lumizern_get_active_vibe_slug();
+    $registry = lumizern_get_vibe_registry();
+    $profile = [
+        'primary' => $active,
+        'secondary' => '',
+        'tertiary' => '',
+        'email_opt_in' => 'no',
+    ];
+
+    if (is_user_logged_in()) {
+        $saved = get_user_meta(get_current_user_id(), 'lumizern_vibe_profile', true);
+        if (is_array($saved)) {
+            foreach (['primary', 'secondary', 'tertiary', 'email_opt_in'] as $field) {
+                if (isset($saved[$field])) {
+                    $profile[$field] = sanitize_text_field((string) $saved[$field]);
+                }
+            }
+        }
+    }
+
+    foreach (['primary', 'secondary', 'tertiary'] as $slug_field) {
+        if (!isset($registry[$profile[$slug_field]])) {
+            $profile[$slug_field] = '';
+        }
+    }
+
+    return $profile;
+}
+
+function lumizern_get_personalized_products(int $limit = 6, array $exclude_ids = []): array
+{
+    if (!function_exists('wc_get_products')) {
+        return [];
+    }
+
+    $active_vibe = lumizern_get_active_vibe_slug();
+    if ($active_vibe === '') {
+        return [];
+    }
+
+    return wc_get_products([
+        'limit' => $limit,
+        'status' => 'publish',
+        'exclude' => array_map('absint', $exclude_ids),
+        'tax_query' => [[
+            'taxonomy' => 'vibe',
+            'field' => 'slug',
+            'terms' => $active_vibe,
+        ]],
+    ]);
+}
+
+function lumizern_register_vibe_account_endpoint(): void
+{
+    add_rewrite_endpoint('vibe-profile', EP_ROOT | EP_PAGES);
+}
+add_action('init', 'lumizern_register_vibe_account_endpoint');
+
+function lumizern_add_vibe_query_vars(array $vars): array
+{
+    $vars[] = 'vibe-profile';
+    return $vars;
+}
+add_filter('query_vars', 'lumizern_add_vibe_query_vars');
+
+function lumizern_account_menu_item(array $items): array
+{
+    $logout = $items['customer-logout'] ?? null;
+    unset($items['customer-logout']);
+    $items['vibe-profile'] = __('My Vibe Profile', 'lumizern-vibe');
+    if ($logout !== null) {
+        $items['customer-logout'] = $logout;
+    }
+    return $items;
+}
+add_filter('woocommerce_account_menu_items', 'lumizern_account_menu_item');
+
+function lumizern_account_vibe_profile_content(): void
+{
+    $profile = lumizern_get_vibe_profile_data();
+    $registry = lumizern_get_vibe_registry();
+    $current = $profile['primary'] ?: 'cozy-cocoon';
+
+    echo '<section class="lumizern-account-vibe">';
+    echo '<h2>' . esc_html__('My Vibe Profile', 'lumizern-vibe') . '</h2>';
+    echo '<p>' . esc_html__('Set your vibe to personalize products, guides, and offers across the store.', 'lumizern-vibe') . '</p>';
+    echo '<div class="vibe-chip-grid">';
+
+    foreach ($registry as $slug => $vibe) {
+        $active = $slug === $current ? ' is-active' : '';
+        echo '<button type="button" class="vibe-chip' . esc_attr($active) . '" data-vibe-profile-option="' . esc_attr($slug) . '">';
+        echo '<span>' . esc_html($vibe['emoji']) . '</span> ' . esc_html($vibe['name']) . '</button>';
+    }
+
+    echo '</div>';
+    echo '<button type="button" class="button alt" data-vibe-profile-save>' . esc_html__('Save vibe profile', 'lumizern-vibe') . '</button>';
+    echo '<p class="vibe-save-status" data-vibe-profile-status></p>';
+    echo '</section>';
+}
+add_action('woocommerce_account_vibe-profile_endpoint', 'lumizern_account_vibe_profile_content');
+
+function lumizern_rewrite_flush_on_theme_switch(): void
+{
+    lumizern_register_vibe_account_endpoint();
+    flush_rewrite_rules();
+}
+add_action('after_switch_theme', 'lumizern_rewrite_flush_on_theme_switch');
+
+function lumizern_vibe_profile_shortcode(): string
+{
+    $url = function_exists('wc_get_account_endpoint_url') ? wc_get_account_endpoint_url('vibe-profile') : home_url('/vibe-profile/');
+    return '<a class="button" href="' . esc_url($url) . '">' . esc_html__('Open My Vibe Profile', 'lumizern-vibe') . '</a>';
+}
+add_shortcode('lumizern_vibe_profile', 'lumizern_vibe_profile_shortcode');

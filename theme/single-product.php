@@ -35,6 +35,10 @@ $fulfillment = lumizern_get_product_fulfillment_label($product->get_id());
           <div class="trust-badge"><span>🔒</span><span><?php esc_html_e('Secure payment processing', 'lumizern-vibe'); ?></span></div>
         </div>
 
+        <?php $active_vibe = lumizern_get_active_vibe_slug(); if ($active_vibe !== '') : ?>
+          <p class="profile-match-note"><?php echo esc_html(sprintf(__('Your profile vibe is %s. We are prioritizing matching recommendations.', 'lumizern-vibe'), lumizern_get_vibe_registry()[$active_vibe]['name'] ?? $active_vibe)); ?></p>
+        <?php endif; ?>
+
         <div class="pdp-desc"><?php the_content(); ?></div>
 
         <section class="product-faq-mini">

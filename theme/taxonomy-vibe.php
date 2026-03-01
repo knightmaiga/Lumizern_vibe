@@ -56,6 +56,14 @@ $benefits = $vibe_benefits[$vibe_slug] ?? $vibe_benefits['cozy-cocoon'];
         <div><img src="<?php echo esc_url($vibe_image); ?>" alt="<?php echo esc_attr($vibe_name); ?>"></div>
     </section>
 
+
+    <?php $active_vibe = lumizern_get_active_vibe_slug(); if ($active_vibe && $active_vibe !== $vibe_slug) : ?>
+    <section class="profile-context-bar"><div class="container-vibe">
+      <p><?php esc_html_e('Your profile is set to another vibe. Compare this collection with your personalized picks.', 'lumizern-vibe'); ?></p>
+      <a href="<?php echo esc_url(function_exists('wc_get_account_endpoint_url') ? wc_get_account_endpoint_url('vibe-profile') : home_url('/vibe-profile/')); ?>"><?php esc_html_e('Update profile', 'lumizern-vibe'); ?></a>
+    </div></section>
+    <?php endif; ?>
+
     <?php if ($products->have_posts()) : ?>
     <section class="editorial-section"><div class="editorial-grid">
     <?php while ($products->have_posts()) : $products->the_post(); $product = wc_get_product(get_the_ID()); if(!$product) continue;

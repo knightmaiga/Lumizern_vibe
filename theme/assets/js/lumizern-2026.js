@@ -43,6 +43,7 @@ class LumizernVibe {
         this.initHeaderScroll();
         this.initCardSpotlight();
         this.initAdaptiveStickyCTA();
+        this.initVibeProfile();
 
         this.isInitialized = true;
     }
@@ -343,6 +344,57 @@ class LumizernVibe {
 
         window.addEventListener('scroll', onScroll, { passive: true });
         onScroll();
+    }
+
+    initVibeProfile() {
+        const saveButton = document.querySelector('[data-vibe-profile-save]');
+        const status = document.querySelector('[data-vibe-profile-status]');
+        const chips = document.querySelectorAll('[data-vibe-profile-option]');
+
+        if (!saveButton || !chips.length || !window.lumizernConfig) return;
+
+        let selected = document.querySelector('[data-vibe-profile-option].is-active')?.dataset.vibeProfileOption || chips[0].dataset.vibeProfileOption;
+
+        chips.forEach((chip) => {
+            chip.addEventListener('click', () => {
+                chips.forEach((c) => c.classList.remove('is-active'));
+                chip.classList.add('is-active');
+                selected = chip.dataset.vibeProfileOption || selected;
+            });
+        });
+
+        saveButton.addEventListener('click', async () => {
+            saveButton.disabled = true;
+            if (status) status.textContent = 'Saving your vibe profile...';
+
+            const body = new URLSearchParams({
+                action: 'lumizern_save_quiz_profile',
+                nonce: lumizernConfig.quiz_profile_nonce || '',
+                primary: selected,
+                secondary: '',
+                tertiary: '',
+                email_opt_in: ''
+            });
+
+            try {
+                const response = await fetch(lumizernConfig.ajax_url, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
+                    body: body.toString()
+                });
+                const data = await response.json();
+                if (data && data.success) {
+                    if (status) status.textContent = 'Saved. Your store experience is now personalized.';
+                } else if (status) {
+                    status.textContent = 'Unable to save right now. Please try again.';
+                }
+            } catch (error) {
+                if (status) status.textContent = 'Unable to save right now. Please try again.';
+            } finally {
+                saveButton.disabled = false;
+            }
+        });
     }
 
     showButtonLoading(btn, text) {
