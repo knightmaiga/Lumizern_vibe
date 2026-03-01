@@ -172,6 +172,13 @@ This keeps discovery consistent while still allowing users to retake the full qu
 - `docs/launch-checklist.md`
 - `docs/seo-discoverability-plan.md`
 - `docs/affiliate-dropship-ops.md`
+- `docs/production-readiness-checklist.md`
+
+Run fast repo preflight:
+
+```bash
+bash scripts/preflight-production.sh
+```
 
 
 ## 15) 90-Day Monetization Execution Roadmap
