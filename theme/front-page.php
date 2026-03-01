@@ -54,7 +54,7 @@ $user_vibe = isset($_COOKIE['user_vibe_result']) ? sanitize_text_field(wp_unslas
   <section class="products-section-2025" aria-labelledby="personalized-vibe-picks">
     <div class="container-vibe">
       <h2 id="personalized-vibe-picks" class="section-title-vibe"><?php esc_html_e('Recommended for your vibe', 'lumizern-vibe'); ?></h2>
-      <p><a class="button" href="<?php echo esc_url(function_exists('wc_get_account_endpoint_url') ? wc_get_account_endpoint_url('vibe-profile') : home_url('/vibe-profile/')); ?>"><?php esc_html_e('Manage vibe profile', 'lumizern-vibe'); ?></a></p>
+      <p><a class="button lz-btn" href="<?php echo esc_url(function_exists('wc_get_account_endpoint_url') ? wc_get_account_endpoint_url('vibe-profile') : home_url('/vibe-profile/')); ?>"><?php esc_html_e('Manage vibe profile', 'lumizern-vibe'); ?></a></p>
       <?php
       $personalized = wc_get_products([
         'limit' => 6,

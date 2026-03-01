@@ -31,7 +31,7 @@ $recommended_products = lumizern_get_personalized_products(8);
 
             <div class="vibe-profile-actions">
                 <button type="button" class="button alt" data-vibe-profile-save><?php esc_html_e('Save my profile', 'lumizern-vibe'); ?></button>
-                <a class="button" href="<?php echo esc_url(home_url('/vibe-quiz/')); ?>"><?php esc_html_e('Retake full quiz', 'lumizern-vibe'); ?></a>
+                <a class="button lz-btn lz-btn-ghost" href="<?php echo esc_url(home_url('/vibe-quiz/')); ?>"><?php esc_html_e('Retake full quiz', 'lumizern-vibe'); ?></a>
                 <p class="vibe-save-status" data-vibe-profile-status></p>
             </div>
         </div>

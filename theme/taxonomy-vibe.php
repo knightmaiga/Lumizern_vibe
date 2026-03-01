@@ -60,7 +60,7 @@ $benefits = $vibe_benefits[$vibe_slug] ?? $vibe_benefits['cozy-cocoon'];
     <?php $active_vibe = lumizern_get_active_vibe_slug(); if ($active_vibe && $active_vibe !== $vibe_slug) : ?>
     <section class="profile-context-bar"><div class="container-vibe">
       <p><?php esc_html_e('Your profile is set to another vibe. Compare this collection with your personalized picks.', 'lumizern-vibe'); ?></p>
-      <a href="<?php echo esc_url(function_exists('wc_get_account_endpoint_url') ? wc_get_account_endpoint_url('vibe-profile') : home_url('/vibe-profile/')); ?>"><?php esc_html_e('Update profile', 'lumizern-vibe'); ?></a>
+      <a class="button lz-btn lz-btn-ghost" href="<?php echo esc_url(function_exists('wc_get_account_endpoint_url') ? wc_get_account_endpoint_url('vibe-profile') : home_url('/vibe-profile/')); ?>"><?php esc_html_e('Update profile', 'lumizern-vibe'); ?></a>
     </div></section>
     <?php endif; ?>
 

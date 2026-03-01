@@ -173,6 +173,7 @@ This keeps discovery consistent while still allowing users to retake the full qu
 - `docs/seo-discoverability-plan.md`
 - `docs/affiliate-dropship-ops.md`
 - `docs/production-readiness-checklist.md`
+- `docs/design-sprint-plan-2026.md`
 
 Run fast repo preflight:
 

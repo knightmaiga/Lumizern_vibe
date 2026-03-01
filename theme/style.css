@@ -204,3 +204,73 @@ body {
 .vibe-trend-lab { margin-top: 1.2rem; }
 .vibe-trend-lab h3 { margin-bottom: .75rem; }
 .profile-context-bar a { font-weight: 700; }
+
+/* 2026 global polish sprint layer */
+:root {
+  --lz-radius-lg: 18px;
+  --lz-radius-pill: 999px;
+  --lz-surface-glass: linear-gradient(160deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
+  --lz-border-soft: 1px solid rgba(255,255,255,.18);
+  --lz-shadow-soft: 0 12px 30px rgba(0,0,0,.24);
+}
+
+.homepage-main section,
+.vibe-perfection section,
+.lumizern-clean-shop section,
+.lumizern-vibe-profile-page section {
+  margin-block: clamp(1.25rem, 2.2vw, 2.25rem);
+}
+
+.lz-btn,
+.button.lz-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  border-radius: var(--lz-radius-pill);
+  border: var(--lz-border-soft);
+  background: var(--lz-surface-glass);
+  color: #fff;
+  padding: .66rem 1.05rem;
+  text-decoration: none;
+  box-shadow: var(--lz-shadow-soft);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.lz-btn:hover,
+.button.lz-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(138,43,226,.45);
+  box-shadow: 0 14px 34px rgba(138,43,226,.28);
+}
+
+.lz-btn-ghost {
+  background: rgba(255,255,255,.03);
+  border-color: rgba(255,255,255,.24);
+}
+
+.profile-context-bar {
+  border-radius: var(--lz-radius-lg);
+  padding-inline: .75rem;
+}
+
+.trending-product-card,
+.vibe-card,
+.clean-card,
+.product-card,
+.guide-card,
+.checkout-section-modern,
+.vibe-cart-item {
+  border-radius: var(--lz-radius-lg);
+  background: var(--lz-surface-glass);
+  border: var(--lz-border-soft);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #8A2BE2;
+  outline-offset: 2px;
+}
