@@ -224,3 +224,17 @@ bash scripts/preflight-production.sh
 - Enforce HTTPS everywhere, enable WAF/rate limiting at edge (Cloudflare DNS/CDN + security only).
 - Retain nonce checks for all AJAX actions; sanitize and escape all user inputs/outputs.
 - Regularly prune stale products to preserve premium catalog quality and brand trust.
+
+
+## 19) Vibe Sourcing Lab (Admin Curator Recommender)
+
+- Admin-only page: **Tools → Vibe Sourcing Lab**
+- Purpose: keep catalog premium by scoring candidate products/affiliate links before adding to store.
+- Inputs: vibe, price, rating, reviews, shipping days, return window, source, quality flags.
+- Output: curator score (0–100) with status:
+  - `approved` (>=70)
+  - `review` (50–69)
+  - `reject` (<50)
+- Stored as private candidates in post type `vibe_source_candidate`.
+
+Use this workflow to avoid low-trust products and maintain premium vibe consistency.

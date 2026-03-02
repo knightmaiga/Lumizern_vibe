@@ -666,3 +666,234 @@ function lumizern_render_trend_lab_admin_page(): void
 
     echo '</div>';
 }
+
+
+function lumizern_register_sourcing_candidate_post_type(): void
+{
+    register_post_type('vibe_source_candidate', [
+        'labels' => [
+            'name' => __('Vibe Sourcing Candidates', 'lumizern-vibe'),
+            'singular_name' => __('Vibe Sourcing Candidate', 'lumizern-vibe'),
+        ],
+        'public' => false,
+        'show_ui' => true,
+        'show_in_menu' => 'tools.php',
+        'supports' => ['title'],
+        'capability_type' => 'post',
+        'map_meta_cap' => true,
+    ]);
+}
+add_action('init', 'lumizern_register_sourcing_candidate_post_type');
+
+function lumizern_calculate_curator_score(array $candidate): array
+{
+    $score = 0;
+    $reasons = [];
+
+    $rating = max(0, min(5, (float) ($candidate['rating'] ?? 0)));
+    $reviews = max(0, (int) ($candidate['reviews'] ?? 0));
+    $price = max(0, (float) ($candidate['price'] ?? 0));
+    $shipping_days = max(0, (int) ($candidate['shipping_days'] ?? 0));
+    $return_days = max(0, (int) ($candidate['return_days'] ?? 0));
+    $premium_material = !empty($candidate['premium_material']);
+    $known_brand = !empty($candidate['known_brand']);
+
+    if ($rating >= 4.6) {
+        $score += 28;
+        $reasons[] = __('High customer rating', 'lumizern-vibe');
+    } elseif ($rating >= 4.3) {
+        $score += 20;
+    } elseif ($rating >= 4.0) {
+        $score += 12;
+    }
+
+    if ($reviews >= 1000) {
+        $score += 22;
+        $reasons[] = __('Strong review confidence', 'lumizern-vibe');
+    } elseif ($reviews >= 300) {
+        $score += 16;
+    } elseif ($reviews >= 100) {
+        $score += 10;
+    }
+
+    if ($price >= 35 && $price <= 350) {
+        $score += 12;
+        $reasons[] = __('Fits premium-yet-convertible price band', 'lumizern-vibe');
+    } elseif ($price > 0 && $price < 15) {
+        $score -= 14;
+        $reasons[] = __('Price may signal low quality perception', 'lumizern-vibe');
+    }
+
+    if ($shipping_days > 0 && $shipping_days <= 5) {
+        $score += 8;
+    } elseif ($shipping_days > 14) {
+        $score -= 10;
+        $reasons[] = __('Shipping time too long for premium UX', 'lumizern-vibe');
+    }
+
+    if ($return_days >= 30) {
+        $score += 8;
+    } elseif ($return_days > 0 && $return_days < 14) {
+        $score -= 6;
+    }
+
+    if ($premium_material) {
+        $score += 8;
+    }
+
+    if ($known_brand) {
+        $score += 8;
+    }
+
+    $url = (string) ($candidate['affiliate_url'] ?? '');
+    if (preg_match('/aliexpress|temu|wish\./i', $url)) {
+        $score -= 16;
+        $reasons[] = __('Source often conflicts with premium positioning', 'lumizern-vibe');
+    }
+
+    $status = $score >= 70 ? 'approved' : ($score >= 50 ? 'review' : 'reject');
+
+    return [
+        'score' => max(0, min(100, $score)),
+        'status' => $status,
+        'reasons' => $reasons,
+    ];
+}
+
+function lumizern_register_sourcing_lab_admin_page(): void
+{
+    add_submenu_page(
+        'tools.php',
+        __('Vibe Sourcing Lab', 'lumizern-vibe'),
+        __('Vibe Sourcing Lab', 'lumizern-vibe'),
+        'manage_options',
+        'lumizern-vibe-sourcing-lab',
+        'lumizern_render_sourcing_lab_admin_page'
+    );
+}
+add_action('admin_menu', 'lumizern_register_sourcing_lab_admin_page');
+
+function lumizern_handle_sourcing_candidate_save(): void
+{
+    if (!current_user_can('manage_options')) {
+        wp_die(esc_html__('Unauthorized', 'lumizern-vibe'));
+    }
+
+    check_admin_referer('lumizern_source_candidate');
+
+    $title = sanitize_text_field($_POST['candidate_title'] ?? '');
+    $vibe = sanitize_title($_POST['candidate_vibe'] ?? '');
+    $affiliate_url = esc_url_raw(wp_unslash($_POST['candidate_affiliate_url'] ?? ''));
+
+    if ($title === '' || $vibe === '' || $affiliate_url === '') {
+        wp_safe_redirect(add_query_arg(['page' => 'lumizern-vibe-sourcing-lab', 'saved' => '0'], admin_url('tools.php')));
+        exit;
+    }
+
+    $candidate = [
+        'rating' => (float) ($_POST['candidate_rating'] ?? 0),
+        'reviews' => (int) ($_POST['candidate_reviews'] ?? 0),
+        'price' => (float) ($_POST['candidate_price'] ?? 0),
+        'shipping_days' => (int) ($_POST['candidate_shipping_days'] ?? 0),
+        'return_days' => (int) ($_POST['candidate_return_days'] ?? 0),
+        'premium_material' => !empty($_POST['candidate_premium_material']) ? 1 : 0,
+        'known_brand' => !empty($_POST['candidate_known_brand']) ? 1 : 0,
+        'affiliate_url' => $affiliate_url,
+        'source' => sanitize_text_field($_POST['candidate_source'] ?? ''),
+    ];
+
+    $score = lumizern_calculate_curator_score($candidate);
+
+    $post_id = wp_insert_post([
+        'post_type' => 'vibe_source_candidate',
+        'post_status' => 'publish',
+        'post_title' => $title,
+    ]);
+
+    if (!is_wp_error($post_id) && $post_id) {
+        update_post_meta($post_id, '_candidate_vibe', $vibe);
+        foreach ($candidate as $k => $v) {
+            update_post_meta($post_id, '_candidate_' . $k, $v);
+        }
+        update_post_meta($post_id, '_candidate_score', (int) $score['score']);
+        update_post_meta($post_id, '_candidate_status', $score['status']);
+        update_post_meta($post_id, '_candidate_reasons', wp_json_encode($score['reasons']));
+    }
+
+    wp_safe_redirect(add_query_arg(['page' => 'lumizern-vibe-sourcing-lab', 'saved' => '1'], admin_url('tools.php')));
+    exit;
+}
+add_action('admin_post_lumizern_save_source_candidate', 'lumizern_handle_sourcing_candidate_save');
+
+function lumizern_render_sourcing_lab_admin_page(): void
+{
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+
+    $registry = lumizern_get_vibe_registry();
+
+    echo '<div class="wrap"><h1>' . esc_html__('Vibe Sourcing Lab', 'lumizern-vibe') . '</h1>';
+    echo '<p>' . esc_html__('Private curator tool: add candidate products, score premium fit, and keep only high-quality vibe matches.', 'lumizern-vibe') . '</p>';
+
+    if (isset($_GET['saved'])) {
+        $class = $_GET['saved'] === '1' ? 'notice notice-success' : 'notice notice-error';
+        $msg = $_GET['saved'] === '1' ? __('Candidate saved and scored.', 'lumizern-vibe') : __('Missing required fields.', 'lumizern-vibe');
+        echo '<div class="' . esc_attr($class) . '"><p>' . esc_html($msg) . '</p></div>';
+    }
+
+    echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="background:#fff;padding:16px;border:1px solid #ddd;max-width:860px">';
+    wp_nonce_field('lumizern_source_candidate');
+    echo '<input type="hidden" name="action" value="lumizern_save_source_candidate" />';
+
+    echo '<p><label><strong>' . esc_html__('Product title', 'lumizern-vibe') . '</strong><br/><input type="text" name="candidate_title" required style="width:100%"></label></p>';
+    echo '<p><label><strong>' . esc_html__('Vibe', 'lumizern-vibe') . '</strong><br/><select name="candidate_vibe" required>';
+    foreach ($registry as $slug => $vibe) {
+        echo '<option value="' . esc_attr($slug) . '">' . esc_html($vibe['name']) . '</option>';
+    }
+    echo '</select></label></p>';
+    echo '<p><label><strong>' . esc_html__('Affiliate/product URL', 'lumizern-vibe') . '</strong><br/><input type="url" name="candidate_affiliate_url" required style="width:100%"></label></p>';
+    echo '<p><label><strong>' . esc_html__('Source/store', 'lumizern-vibe') . '</strong><br/><input type="text" name="candidate_source" placeholder="Amazon, Brand site, etc."></label></p>';
+    echo '<p><label>' . esc_html__('Price (USD)', 'lumizern-vibe') . ' <input type="number" step="0.01" min="0" name="candidate_price"></label> ';
+    echo '<label>' . esc_html__('Rating (0-5)', 'lumizern-vibe') . ' <input type="number" step="0.1" min="0" max="5" name="candidate_rating"></label> ';
+    echo '<label>' . esc_html__('Review count', 'lumizern-vibe') . ' <input type="number" min="0" name="candidate_reviews"></label></p>';
+    echo '<p><label>' . esc_html__('Shipping days', 'lumizern-vibe') . ' <input type="number" min="0" name="candidate_shipping_days"></label> ';
+    echo '<label>' . esc_html__('Return window days', 'lumizern-vibe') . ' <input type="number" min="0" name="candidate_return_days"></label></p>';
+    echo '<p><label><input type="checkbox" name="candidate_premium_material" value="1"> ' . esc_html__('Premium materials / build quality verified', 'lumizern-vibe') . '</label><br/>';
+    echo '<label><input type="checkbox" name="candidate_known_brand" value="1"> ' . esc_html__('Known trusted brand', 'lumizern-vibe') . '</label></p>';
+    submit_button(__('Score and save candidate', 'lumizern-vibe'));
+    echo '</form>';
+
+    $candidates = get_posts([
+        'post_type' => 'vibe_source_candidate',
+        'post_status' => 'publish',
+        'numberposts' => 50,
+        'orderby' => 'date',
+        'order' => 'DESC',
+    ]);
+
+    echo '<h2 style="margin-top:24px">' . esc_html__('Recent candidates', 'lumizern-vibe') . '</h2>';
+    echo '<table class="widefat striped"><thead><tr><th>' . esc_html__('Product', 'lumizern-vibe') . '</th><th>' . esc_html__('Vibe', 'lumizern-vibe') . '</th><th>' . esc_html__('Score', 'lumizern-vibe') . '</th><th>' . esc_html__('Status', 'lumizern-vibe') . '</th><th>' . esc_html__('URL', 'lumizern-vibe') . '</th></tr></thead><tbody>';
+
+    if (empty($candidates)) {
+        echo '<tr><td colspan="5">' . esc_html__('No candidates yet.', 'lumizern-vibe') . '</td></tr>';
+    } else {
+        foreach ($candidates as $candidate_post) {
+            $vibe_slug = (string) get_post_meta($candidate_post->ID, '_candidate_vibe', true);
+            $score = (int) get_post_meta($candidate_post->ID, '_candidate_score', true);
+            $status = (string) get_post_meta($candidate_post->ID, '_candidate_status', true);
+            $url = (string) get_post_meta($candidate_post->ID, '_candidate_affiliate_url', true);
+            $vibe_name = $registry[$vibe_slug]['name'] ?? $vibe_slug;
+
+            echo '<tr>';
+            echo '<td>' . esc_html($candidate_post->post_title) . '</td>';
+            echo '<td>' . esc_html($vibe_name) . '</td>';
+            echo '<td><strong>' . esc_html((string) $score) . '</strong></td>';
+            echo '<td>' . esc_html(ucfirst($status)) . '</td>';
+            echo '<td><a href="' . esc_url($url) . '" target="_blank" rel="noopener nofollow">' . esc_html__('Open', 'lumizern-vibe') . '</a></td>';
+            echo '</tr>';
+        }
+    }
+
+    echo '</tbody></table></div>';
+}
