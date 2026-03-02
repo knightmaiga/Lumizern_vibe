@@ -897,3 +897,200 @@ function lumizern_render_sourcing_lab_admin_page(): void
 
     echo '</tbody></table></div>';
 }
+
+function lumizern_register_weekly_cron_schedule(array $schedules): array
+{
+    if (!isset($schedules['weekly'])) {
+        $schedules['weekly'] = [
+            'interval' => WEEK_IN_SECONDS,
+            'display' => __('Once Weekly', 'lumizern-vibe'),
+        ];
+    }
+
+    return $schedules;
+}
+add_filter('cron_schedules', 'lumizern_register_weekly_cron_schedule');
+
+function lumizern_schedule_blog_automator_event(): void
+{
+    if (!wp_next_scheduled('lumizern_generate_vibe_blog_posts_weekly')) {
+        wp_schedule_event(time() + HOUR_IN_SECONDS, 'weekly', 'lumizern_generate_vibe_blog_posts_weekly');
+    }
+}
+add_action('wp', 'lumizern_schedule_blog_automator_event');
+
+function lumizern_unschedule_blog_automator_event(): void
+{
+    $timestamp = wp_next_scheduled('lumizern_generate_vibe_blog_posts_weekly');
+    if ($timestamp) {
+        wp_unschedule_event($timestamp, 'lumizern_generate_vibe_blog_posts_weekly');
+    }
+}
+add_action('switch_theme', 'lumizern_unschedule_blog_automator_event');
+
+function lumizern_register_blog_automator_admin_page(): void
+{
+    add_submenu_page(
+        'tools.php',
+        __('Vibe Blog Automator', 'lumizern-vibe'),
+        __('Vibe Blog Automator', 'lumizern-vibe'),
+        'manage_options',
+        'lumizern-vibe-blog-automator',
+        'lumizern_render_blog_automator_admin_page'
+    );
+}
+add_action('admin_menu', 'lumizern_register_blog_automator_admin_page');
+
+function lumizern_generate_vibe_blog_content(string $vibe_slug, string $vibe_name, array $products): string
+{
+    $lines = [];
+    $lines[] = sprintf(__('If you are building a %s lifestyle, this curated guide highlights products with strong quality signals and conversion-ready utility.', 'lumizern-vibe'), $vibe_name);
+    $lines[] = '';
+    $lines[] = __('## Why this vibe works', 'lumizern-vibe');
+    $lines[] = sprintf(__('The %s vibe prioritizes cohesive aesthetics, quality materials, and practical comfort.', 'lumizern-vibe'), $vibe_name);
+    $lines[] = '';
+    $lines[] = __('## Curated product picks', 'lumizern-vibe');
+
+    foreach ($products as $product) {
+        if (!$product instanceof WC_Product) {
+            continue;
+        }
+
+        $url = get_permalink($product->get_id());
+        $is_affiliate = get_post_meta($product->get_id(), '_is_affiliate', true) === 'yes';
+        $aff_url = (string) get_post_meta($product->get_id(), '_affiliate_url', true);
+
+        if ($is_affiliate && $aff_url !== '') {
+            $url = $aff_url;
+        }
+
+        $lines[] = sprintf(
+            '- **[%s](%s)** — %s',
+            wp_strip_all_tags($product->get_name()),
+            esc_url_raw($url),
+            wp_strip_all_tags($product->get_short_description() ?: wp_trim_words($product->get_description(), 22))
+        );
+    }
+
+    $lines[] = '';
+    $lines[] = __('## How to style this vibe', 'lumizern-vibe');
+    $lines[] = __('Start with one anchor piece, layer 2–3 supporting products, and keep color/material consistency for a premium look.', 'lumizern-vibe');
+    $lines[] = '';
+    $lines[] = __('---', 'lumizern-vibe');
+    $lines[] = __('Affiliate disclosure: some links may be affiliate links. We only curate products that pass our quality and vibe-fit review.', 'lumizern-vibe');
+
+    return implode("\n", $lines);
+}
+
+function lumizern_create_vibe_blog_post(string $vibe_slug, int $limit = 6, string $post_status = 'draft'): array
+{
+    $registry = lumizern_get_vibe_registry();
+    if (!isset($registry[$vibe_slug])) {
+        return ['created' => false, 'message' => __('Invalid vibe slug.', 'lumizern-vibe')];
+    }
+
+    $vibe_name = $registry[$vibe_slug]['name'];
+    $products = lumizern_get_trending_vibe_products($vibe_slug, max(3, $limit));
+
+    if (empty($products)) {
+        return ['created' => false, 'message' => __('No products available for this vibe.', 'lumizern-vibe')];
+    }
+
+    $title = sprintf(__('Best %s Picks for %s (%s)', 'lumizern-vibe'), $vibe_name, date_i18n('Y'), wp_generate_password(4, false, false));
+    $content = lumizern_generate_vibe_blog_content($vibe_slug, $vibe_name, $products);
+
+    $post_id = wp_insert_post([
+        'post_type' => 'post',
+        'post_status' => in_array($post_status, ['draft', 'pending', 'publish'], true) ? $post_status : 'draft',
+        'post_title' => $title,
+        'post_content' => wp_kses_post($content),
+        'post_excerpt' => wp_strip_all_tags(wp_trim_words($content, 35)),
+    ]);
+
+    if (is_wp_error($post_id) || !$post_id) {
+        return ['created' => false, 'message' => __('Failed to create blog post.', 'lumizern-vibe')];
+    }
+
+    wp_set_object_terms($post_id, [$vibe_slug], 'vibe', false);
+
+    return ['created' => true, 'post_id' => $post_id, 'title' => $title];
+}
+
+function lumizern_generate_weekly_vibe_posts(): void
+{
+    foreach (array_keys(lumizern_get_vibe_registry()) as $vibe_slug) {
+        lumizern_create_vibe_blog_post($vibe_slug, 5, 'draft');
+    }
+}
+add_action('lumizern_generate_vibe_blog_posts_weekly', 'lumizern_generate_weekly_vibe_posts');
+
+function lumizern_handle_blog_automator_generate(): void
+{
+    if (!current_user_can('manage_options')) {
+        wp_die(esc_html__('Unauthorized', 'lumizern-vibe'));
+    }
+
+    check_admin_referer('lumizern_blog_automator_generate');
+
+    $vibe = sanitize_title($_POST['automator_vibe'] ?? '');
+    $limit = max(3, absint($_POST['automator_limit'] ?? 6));
+    $post_status = sanitize_text_field($_POST['automator_status'] ?? 'draft');
+
+    $result = lumizern_create_vibe_blog_post($vibe, $limit, $post_status);
+    $args = ['page' => 'lumizern-vibe-blog-automator'];
+
+    if (!empty($result['created'])) {
+        $args['created'] = '1';
+        $args['post_id'] = (int) ($result['post_id'] ?? 0);
+    } else {
+        $args['created'] = '0';
+    }
+
+    wp_safe_redirect(add_query_arg($args, admin_url('tools.php')));
+    exit;
+}
+add_action('admin_post_lumizern_blog_automator_generate', 'lumizern_handle_blog_automator_generate');
+
+function lumizern_render_blog_automator_admin_page(): void
+{
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+
+    $registry = lumizern_get_vibe_registry();
+    echo '<div class="wrap"><h1>' . esc_html__('Vibe Blog Automator', 'lumizern-vibe') . '</h1>';
+    echo '<p>' . esc_html__('Generate SEO-ready curated vibe blog drafts from top vibe products. Built for internal admin use only.', 'lumizern-vibe') . '</p>';
+
+    if (isset($_GET['created'])) {
+        if ($_GET['created'] === '1') {
+            $post_id = absint($_GET['post_id'] ?? 0);
+            $edit_link = $post_id ? get_edit_post_link($post_id) : '';
+            echo '<div class="notice notice-success"><p>' . esc_html__('Blog draft created successfully.', 'lumizern-vibe');
+            if ($edit_link) {
+                echo ' <a href="' . esc_url($edit_link) . '">' . esc_html__('Edit post', 'lumizern-vibe') . '</a>';
+            }
+            echo '</p></div>';
+        } else {
+            echo '<div class="notice notice-error"><p>' . esc_html__('Unable to create post. Check vibe/products.', 'lumizern-vibe') . '</p></div>';
+        }
+    }
+
+    echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="background:#fff;padding:16px;border:1px solid #ddd;max-width:860px">';
+    wp_nonce_field('lumizern_blog_automator_generate');
+    echo '<input type="hidden" name="action" value="lumizern_blog_automator_generate" />';
+
+    echo '<p><label><strong>' . esc_html__('Vibe', 'lumizern-vibe') . '</strong><br/><select name="automator_vibe" required>';
+    foreach ($registry as $slug => $vibe) {
+        echo '<option value="' . esc_attr($slug) . '">' . esc_html($vibe['name']) . '</option>';
+    }
+    echo '</select></label></p>';
+
+    echo '<p><label><strong>' . esc_html__('Number of products to include', 'lumizern-vibe') . '</strong><br/><input type="number" min="3" max="12" value="6" name="automator_limit"></label></p>';
+    echo '<p><label><strong>' . esc_html__('Post status', 'lumizern-vibe') . '</strong><br/><select name="automator_status"><option value="draft">Draft</option><option value="pending">Pending Review</option><option value="publish">Publish</option></select></label></p>';
+    submit_button(__('Generate vibe blog post', 'lumizern-vibe'));
+    echo '</form>';
+
+    echo '<h2 style="margin-top:20px">' . esc_html__('Quick Actions', 'lumizern-vibe') . '</h2>';
+    echo '<p>' . esc_html__('Weekly automation is enabled via WP-Cron and creates draft posts for each vibe.', 'lumizern-vibe') . '</p>';
+    echo '</div>';
+}

@@ -238,3 +238,18 @@ bash scripts/preflight-production.sh
 - Stored as private candidates in post type `vibe_source_candidate`.
 
 Use this workflow to avoid low-trust products and maintain premium vibe consistency.
+
+
+## 20) Vibe Blog Automator (Admin SEO/Conversion Writer)
+
+- Admin-only page: **Tools → Vibe Blog Automator**
+- Generates vibe-specific blog posts from trending curated products.
+- Supports on-demand generation and weekly automatic draft generation via WP-Cron.
+- Post includes:
+  - vibe intent framing
+  - curated product links
+  - style guidance section
+  - affiliate disclosure
+- Assigns the generated post to the matching `vibe` taxonomy term.
+
+Recommended workflow: generate as `draft`, manually review/edit title/meta, then publish.
