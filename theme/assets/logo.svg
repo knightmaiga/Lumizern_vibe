@@ -1,0 +1,17 @@
+<svg width="360" height="90" viewBox="0 0 360 90" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Lumizern logo">
+  <defs>
+    <linearGradient id="lumizernGold" x1="32" y1="45" x2="328" y2="45" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF6B6B"/>
+      <stop offset="0.48" stop-color="#F5A623"/>
+      <stop offset="1" stop-color="#F8E71C"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="360" height="90" fill="transparent"/>
+  <text x="30" y="62"
+        fill="url(#lumizernGold)"
+        font-family="Inter, Montserrat, 'Segoe UI', Arial, sans-serif"
+        font-size="58"
+        font-weight="800"
+        letter-spacing="1.2">LUMIZERN</text>
+</svg>

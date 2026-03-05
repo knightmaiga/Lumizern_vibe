@@ -1,0 +1,3 @@
+product_title,product_slug,description,short_description,image_url,price_html,product_type,is_affiliate,affiliate_url,primary_vibe,secondary_vibe,tags,sku,inventory_status
+"Cozy Knit Throw Blanket","cozy-knit-throw-blanket","Long cozy description...","Soft throw for cozy evenings","https://example.com/image.jpg","$39.99","simple","no","","cozy-cocoon","zen-chill","cozy,blanket,home","LZ-COZY-001","instock"
+"Minimal Desk Lamp","minimal-desk-lamp","Long aesthetic description...","Ambient light for focus","https://example.com/lamp.jpg","$49.99","external","yes","https://affiliate-network.example/product/123","creative-hustle","aesthetic-curator","lamp,desk,focus","LZ-CRTV-014","instock"
