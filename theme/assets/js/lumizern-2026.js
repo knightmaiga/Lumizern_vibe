@@ -40,7 +40,10 @@ class LumizernVibe {
         this.initCartFunctionality();
         this.initNewsletterForms();
         this.initPerformanceOptimizations();
+        this.init2026Settings();
         this.initHeaderScroll();
+        this.initSectionReveal();
+        this.initEnhancedA11y();
         this.initCardSpotlight();
         this.initAdaptiveStickyCTA();
         this.initVibeProfile();
@@ -125,14 +128,18 @@ class LumizernVibe {
             this.mobileNav.classList.toggle('active', !isActive);
             this.mobileToggle.classList.toggle('active', !isActive);
             this.mobileToggle.setAttribute('aria-expanded', String(!isActive));
+            this.mobileNav.setAttribute('aria-hidden', String(isActive));
+            document.body.classList.toggle('lz-no-scroll', !isActive);
             document.body.style.overflow = !isActive ? 'hidden' : '';
         });
 
         this.mobileNav.querySelectorAll('a').forEach((link) => {
             link.addEventListener('click', () => {
                 this.mobileNav.classList.remove('active');
+                this.mobileNav.setAttribute('aria-hidden', 'true');
                 this.mobileToggle.classList.remove('active');
                 this.mobileToggle.setAttribute('aria-expanded', 'false');
+                document.body.classList.remove('lz-no-scroll');
                 document.body.style.overflow = '';
             });
         });
@@ -147,6 +154,8 @@ class LumizernVibe {
         trigger.addEventListener('click', (e) => {
             e.preventDefault();
             overlay.classList.add('active');
+            overlay.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('lz-no-scroll');
             document.body.style.overflow = 'hidden';
             const input = overlay.querySelector("input[type='search']");
             if (input) setTimeout(() => input.focus(), 100);
@@ -156,6 +165,8 @@ class LumizernVibe {
             closeBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 overlay.classList.remove('active');
+                overlay.setAttribute('aria-hidden', 'true');
+                document.body.classList.remove('lz-no-scroll');
                 document.body.style.overflow = '';
             });
         }
@@ -163,6 +174,17 @@ class LumizernVibe {
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) {
                 overlay.classList.remove('active');
+                overlay.setAttribute('aria-hidden', 'true');
+                document.body.classList.remove('lz-no-scroll');
+                document.body.style.overflow = '';
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && overlay.classList.contains('active')) {
+                overlay.classList.remove('active');
+                overlay.setAttribute('aria-hidden', 'true');
+                document.body.classList.remove('lz-no-scroll');
                 document.body.style.overflow = '';
             }
         });
@@ -321,9 +343,9 @@ class LumizernVibe {
 
         const updateHeader = () => {
             const currentY = window.scrollY;
-            if (currentY > 100) {
+            if (currentY > 48) {
                 header.classList.add('scrolled');
-                header.style.transform = currentY > lastY && currentY > 200 ? 'translateY(-100%)' : 'translateY(0)';
+                header.style.transform = 'translateY(0)';
             } else {
                 header.classList.remove('scrolled');
                 header.style.transform = 'translateY(0)';
@@ -426,6 +448,57 @@ class LumizernVibe {
         });
     }
 
+
+
+    init2026Settings() {
+        const cfg = window.lumizernConfig || {};
+        const ui = cfg.ui || {};
+
+        if (ui.prefers_reduced_motion || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            document.documentElement.classList.add('lz-reduced-motion');
+        }
+
+        const visualMode = localStorage.getItem('lumizern_visual_mode') || ui.default_visual_mode || 'immersive';
+        document.documentElement.dataset.lzVisualMode = visualMode;
+
+        const compactCards = localStorage.getItem('lumizern_compact_cards') === '1';
+        document.documentElement.classList.toggle('lz-compact-cards', compactCards);
+
+        const cartFromStorage = parseInt(localStorage.getItem('lumizern_cart_count') || '', 10);
+        if (!Number.isNaN(cartFromStorage)) {
+            this.updateCartCount(cartFromStorage);
+        }
+    }
+
+    initSectionReveal() {
+        const targets = document.querySelectorAll('.lz-hero, .vibe-section, .social-proof-vibe, .trending-section, .clean-products, .vibe-profile-recommendations, .footer-vibe');
+        if (!targets.length) return;
+
+        if (document.documentElement.classList.contains('lz-reduced-motion') || !('IntersectionObserver' in window)) {
+            targets.forEach((el) => el.classList.add('is-revealed'));
+            return;
+        }
+
+        const observer = new IntersectionObserver((entries, obs) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-revealed');
+                    obs.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' });
+
+        targets.forEach((el) => observer.observe(el));
+    }
+
+    initEnhancedA11y() {
+        document.querySelectorAll('a.button, .button, .lz-btn').forEach((btn) => {
+            if (!btn.getAttribute('aria-label') && btn.textContent) {
+                btn.setAttribute('aria-label', btn.textContent.trim());
+            }
+        });
+    }
+
     showButtonLoading(btn, text) {
         if (!btn) return;
         btn.disabled = true;
@@ -443,11 +516,6 @@ class LumizernVibe {
         document.querySelectorAll('.notification').forEach((n) => n.remove());
         const box = document.createElement('div');
         box.className = `notification notification-${type}`;
-        box.style.cssText = `
-            position: fixed; right: 20px; top: 100px; padding: 16px 24px;
-            background: ${type === 'success' ? '#4CAF50' : (type === 'error' ? '#f44336' : '#2196F3')};
-            color: white; border-radius: 8px; z-index: 10000; max-width: 320px;
-        `;
         box.textContent = msg;
         document.body.appendChild(box);
         setTimeout(() => box.remove(), 3500);
@@ -455,7 +523,7 @@ class LumizernVibe {
 }
 
 function initializePageSpecificFeatures() {
-    const elementsToAnimate = document.querySelectorAll('.vibe-card, .proof-stat-vibe');
+    const elementsToAnimate = document.querySelectorAll('.vibe-card, .proof-stat-vibe, .clean-card, .trending-product-card');
     if (!elementsToAnimate.length) return;
 
     if (!('IntersectionObserver' in window)) {

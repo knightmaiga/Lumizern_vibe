@@ -105,6 +105,10 @@ final class LumizernVibe2025
                 'ajax_url' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('lumizern_2025_nonce'),
                 'quiz_profile_nonce' => wp_create_nonce('lumizern_quiz_profile_nonce'),
+                'ui' => [
+                    'default_visual_mode' => 'immersive',
+                    'prefers_reduced_motion' => wp_is_mobile() && !empty($_SERVER['HTTP_SAVE_DATA']),
+                ],
             ]);
         }
     }
